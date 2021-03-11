@@ -20,18 +20,29 @@ app.get("/authorization/:code/:clientid/:clientsecret", async (req, res) => {
   res.status(200).send(result.access_token);
 });
 
-app.get("/getCalendarList/:accesstoken", async (req, res) => {
+app.get("/getCalendarList/:accesstoken/:name", async (req, res) => {
   let accessToken = req.params.accesstoken;
+  let calendarName = req.params.name;
   //fetch calendar list from api
+  accessToken = `Zoho-oauthtoken ${accessToken}`;
   let result = await fetch("https://calendar.zoho.com/api/v1/calendars", {
-    headers: { Autorization: `Zoho-oauthtoken ${accessToken}` },
+    headers: { "Authorization": accessToken},
   })
-    .then((response) => response.JSON())
+    .then((response) => response.json())
     .catch((err) => {
+      console.log(err);
       res.status(400).send(err);
     });
 
-    res.status(200).send(result);
+    let calendar = result.calendars.filter(e => {
+      return e.name === calendarName;
+    });
+
+    if(calendar.length() > 0) {
+      res.status(200).send(calendar[0].uid);
+    } else {
+      res.status(400).send("Calendar not found");
+    }
 });
 
 app.get("/getEventList/:accesstoken/:calendarid", async (req, res) => {
