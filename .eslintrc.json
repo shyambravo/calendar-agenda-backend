@@ -1,12 +1,14 @@
 {
-    "env": {
-        "node": true
-    },
-    "extends": ["eslint:recommended", "eslint"],
-    "parserOptions": {
-        "ecmaVersion": 12,
-        "sourceType": "module"
-    },
-    "rules": {
-        "node/no-unsupported-features/es-syntax": "off" }
+  "env": {
+    "node": true,
+    "es6": true
+  },
+  "extends": ["eslint:recommended", "eslint"],
+  "parserOptions": {
+    "ecmaVersion": 12,
+    "sourceType": "module"
+  },
+  "rules": {
+    "node/no-unsupported-features/es-syntax": "off"
+  }
 }

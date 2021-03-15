@@ -31,6 +31,7 @@
     "@babel/preset-env": "^7.13.10",
     "eslint": "^7.22.0",
     "eslint-config-eslint": "^7.0.0",
-    "eslint-plugin-import": "^2.22.1"
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-node": "^11.1.0"
   }
 }
