@@ -83,6 +83,22 @@ app.post("/getEventList/:accesstoken/:calendarid", async (req, res) => {
 
 });
 
+app.get("/getCalendars/:accesstoken", async (req, res) => {
+    const token = `Zoho-oauthtoken ${req.params.accesstoken}`;
+    const result = await fetch("https://calendar.zoho.com/api/v1/calendars", {
+        headers: { Authorization: token }
+    }).then(resp => {
+        if (resp.status !== 400) {
+            return resp.json();
+        }
+        return 0;
+    });
+
+    if (result !== 0) {
+        res.status(200).send(result);
+    }
+});
+
 // app.get(
 //   "/getEventDetails/:accesstoken/:calendarid/:eventid",
 //   async (req, res) => {
