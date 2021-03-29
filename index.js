@@ -99,6 +99,14 @@ app.get("/getCalendars/:accesstoken", async (req, res) => {
     }
 });
 
+
+app.post("/editEvent/:token", async (req, res) => {
+
+    // console.log(req.body, req.params.token);
+
+    res.status(200).send("success");
+});
+
 // app.get(
 //   "/getEventDetails/:accesstoken/:calendarid/:eventid",
 //   async (req, res) => {
