@@ -18,41 +18,12 @@ app.get("/authorization/:code/:clientid/:clientsecret", async (req, res) => {
     const clientId = req.params.clientid;
     const clientSecret = req.params.clientsecret;
 
-    console.log(clientId, clientSecret);
-
     const result = await fetch(
         `https://accounts.zoho.com/oauth/v2/token?code=${code}&grant_type=authorization_code&client_id=${clientId}&client_secret=${clientSecret}&redirect_uri=http://127.0.0.1:3000/home&scope=AaaServer.profile.READ%2CAaaServer.profile.UPDATE`,
         { method: "POST" }
     ).then(resp => resp.json());
 
-    console.log(result);
-
     res.status(200).send(result);
-});
-
-app.get("/getCalendarName/:accesstoken/:name", async (req, res) => {
-    let accessToken = req.params.accesstoken;
-    const calendarName = req.params.name;
-
-
-    // fetch calendar list from api
-    accessToken = `Zoho-oauthtoken ${accessToken}`;
-    const result = await fetch("https://calendar.zoho.com/api/v1/calendars", {
-        headers: { Authorization: accessToken }
-    }).then(response => response.json());
-
-    let calendar;
-
-    if (result) {
-        calendar = result.calendars.filter(e => e.name === calendarName);
-        if (calendar.length > 0) {
-            res.status(200).send(calendar);
-        } else {
-            res.status(400).send("calendar not found");
-        }
-    } else {
-        res.status(400).send("Calendar not found");
-    }
 });
 
 app.post("/getEventList/:accesstoken/:calendarid", async (req, res) => {
@@ -76,11 +47,17 @@ app.post("/getEventList/:accesstoken/:calendarid", async (req, res) => {
         if (resp.status !== 400) {
             return resp.json();
         }
+        if (resp.status === 401) {
+            return 1;
+        }
         return 0;
 
     });
 
-    if (result !== 0) {
+    if (result === 1) {
+        res.status(401).send("Invalid Token");
+
+    } else if (result !== 0) {
         res.status(200).send(result);
     }
 
@@ -91,13 +68,18 @@ app.get("/getCalendars/:accesstoken", async (req, res) => {
     const result = await fetch("https://calendar.zoho.com/api/v1/calendars", {
         headers: { Authorization: token }
     }).then(resp => {
-        if (resp.status !== 400) {
+        if (resp.status === 200) {
             return resp.json();
+        }
+        if (resp.status === 401) {
+            return 1;
         }
         return 0;
     });
 
-    if (result !== 0) {
+    if (result === 1) {
+        res.status(401).send("Invalid auth token");
+    } else if (result !== 0) {
         res.status(200).send(result);
     }
 });
@@ -116,7 +98,7 @@ app.get("/getnewtoken/:token/:clientid/:clientsecret", async (req, res) => {
     const clientsecret = req.params.clientsecret;
 
     const result = await fetch(
-        `https://accounts.zoho.com/oauth/v2/token?refresh_token=${token}&grant_type=refresh_token&client_id=${clientid}&client_secret=${clientsecret}&redirect_uri=http://127.0.0.1:3000/home`,
+        `https://accounts.zoho.com/oauth/v2/token?refresh_token=${token}&grant_type=refresh_token&client_id=${clientid}&client_secret=${clientsecret}`,
         { method: "POST" }
     ).then(resp => resp.json());
 
