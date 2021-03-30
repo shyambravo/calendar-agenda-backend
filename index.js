@@ -18,13 +18,16 @@ app.get("/authorization/:code/:clientid/:clientsecret", async (req, res) => {
     const clientId = req.params.clientid;
     const clientSecret = req.params.clientsecret;
 
+    console.log(clientId, clientSecret);
+
     const result = await fetch(
         `https://accounts.zoho.com/oauth/v2/token?code=${code}&grant_type=authorization_code&client_id=${clientId}&client_secret=${clientSecret}&redirect_uri=http://127.0.0.1:3000/home&scope=AaaServer.profile.READ%2CAaaServer.profile.UPDATE`,
         { method: "POST" }
     ).then(resp => resp.json());
 
+    console.log(result);
 
-    res.status(200).send(result.access_token);
+    res.status(200).send(result);
 });
 
 app.get("/getCalendarName/:accesstoken/:name", async (req, res) => {
@@ -100,11 +103,25 @@ app.get("/getCalendars/:accesstoken", async (req, res) => {
 });
 
 
-app.post("/editEvent/:token", async (req, res) => {
+// app.post("/editEvent/:token", async (req, res) => {
 
-    // console.log(req.body, req.params.token);
+//     // console.log(req.body, req.params.token);
 
-    res.status(200).send("success");
+//     res.status(200).send("success");
+// });
+
+app.get("/getnewtoken/:token/:clientid/:clientsecret", async (req, res) => {
+    const token = req.params.token;
+    const clientid = req.params.clientid;
+    const clientsecret = req.params.clientsecret;
+
+    const result = await fetch(
+        `https://accounts.zoho.com/oauth/v2/token?refresh_token=${token}&grant_type=refresh_token&client_id=${clientid}&client_secret=${clientsecret}&redirect_uri=http://127.0.0.1:3000/home`,
+        { method: "POST" }
+    ).then(resp => resp.json());
+
+    res.send(result);
+
 });
 
 // app.get(
