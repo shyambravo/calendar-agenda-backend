@@ -2,6 +2,7 @@ import express from "express";
 import fetch from "node-fetch";
 import cors from "cors";
 import bodyParser from "body-parser";
+const FormData = require("form-data");
 
 
 const app = express();
@@ -54,12 +55,12 @@ app.post("/getEventList/:accesstoken/:calendarid", async (req, res) => {
 
     });
 
-    if (result === 1) {
-        res.status(401).send("Invalid Token");
-
-    } else if (result !== 0) {
+    if (result !== 0 && result !== 1) {
         res.status(200).send(result);
+    } else {
+        res.status(401).send("Invalid Token");
     }
+
 
 });
 
@@ -77,23 +78,52 @@ app.get("/getCalendars/:accesstoken", async (req, res) => {
         return 0;
     });
 
-    if (result === 1) {
-        res.status(401).send("Invalid auth token");
-    } else if (result !== 0) {
+
+    if (result !== 0 && result !== 1) {
         res.status(200).send(result);
+    } else {
+        res.status(401).send("Invalid auth token");
     }
+
 });
 
 
 app.post("/editEvent/:token", async (req, res) => {
+    const token = `Zoho-oauthtoken ${req.params.token}`;
+    const obj = req.body;
+    const eventdata = {
+        title: obj.title,
+        uid: obj.uid,
+        etag: obj.etag,
+        estatus: obj.estatus,
+        dateandtime: obj.dateandtime,
+        color: obj.color
+    };
+    const data = new FormData();
 
-    // console.log(req.body, req.params.token);
+    data.append("eventdata", JSON.stringify(eventdata));
+
+
     const result = await fetch(
-        `https://accounts.zoho.com/oauth/v2/token?code=${code}&grant_type=authorization_code&client_id=${clientId}&client_secret=${clientSecret}&redirect_uri=http://127.0.0.1:3000/home&scope=AaaServer.profile.READ%2CAaaServer.profile.UPDATE`,
-        { method: "POST" }
-    ).then(resp => resp.json());
+        `https://calendar.zoho.com/api/v1/calendars/${req.body.cid}/events/${req.body.uid}`,
+        { method: "POST", headers: { Authorization: token }, body: data }
+    ).then(resp => {
+        if (resp.status === 200) {
+            return resp.json();
+        }
+        if (resp.status === 401) {
+            return 1;
+        }
+        return 0;
+    });
 
-    res.status(200).send("success");
+    if (result !== 1 && result !== 0) {
+        res.status(200).send(result);
+    } else {
+        res.status(401).send("Invaid token");
+    }
+
+
 });
 
 app.get("/getnewtoken/:token/:clientid/:clientsecret", async (req, res) => {
@@ -110,16 +140,5 @@ app.get("/getnewtoken/:token/:clientid/:clientsecret", async (req, res) => {
 
 });
 
-// app.get(
-//   "/getEventDetails/:accesstoken/:calendarid/:eventid",
-//   async (req, res) => {
-//     let accessToken = req.params.accessToken;
-//     let calendarid = req.params.calendarid;
-//     //fetch event detail
-//   }
-// );
 
-app.listen(port, () => {
-
-    // console.log(`Example app listening at http://localhost:${port}`);
-});
+app.listen(port);
