@@ -4,7 +4,6 @@ import cors from "cors";
 import bodyParser from "body-parser";
 const FormData = require("form-data");
 
-
 const app = express();
 const port = 5000;
 
@@ -52,7 +51,6 @@ app.post("/getEventList/:accesstoken/:calendarid", async (req, res) => {
             return 1;
         }
         return 0;
-
     });
 
     if (result !== 0 && result !== 1) {
@@ -60,8 +58,6 @@ app.post("/getEventList/:accesstoken/:calendarid", async (req, res) => {
     } else {
         res.status(401).send("Invalid Token");
     }
-
-
 });
 
 app.get("/getCalendars/:accesstoken", async (req, res) => {
@@ -78,15 +74,12 @@ app.get("/getCalendars/:accesstoken", async (req, res) => {
         return 0;
     });
 
-
     if (result !== 0 && result !== 1) {
         res.status(200).send(result);
     } else {
         res.status(401).send("Invalid auth token");
     }
-
 });
-
 
 app.post("/editEvent/:token", async (req, res) => {
     const token = `Zoho-oauthtoken ${req.params.token}`;
@@ -97,17 +90,18 @@ app.post("/editEvent/:token", async (req, res) => {
         etag: obj.etag,
         estatus: obj.estatus,
         dateandtime: obj.dateandtime,
-        color: obj.color
+        color: obj.color,
+        description: obj.description
     };
     const data = new FormData();
 
     data.append("eventdata", JSON.stringify(eventdata));
 
-
     const result = await fetch(
         `https://calendar.zoho.com/api/v1/calendars/${req.body.cid}/events/${req.body.uid}`,
         { method: "POST", headers: { Authorization: token }, body: data }
     ).then(resp => {
+
         if (resp.status === 200) {
             return resp.json();
         }
@@ -117,28 +111,53 @@ app.post("/editEvent/:token", async (req, res) => {
         return 0;
     });
 
+
     if (result !== 1 && result !== 0) {
         res.status(200).send(result);
     } else {
         res.status(401).send("Invaid token");
     }
-
-
 });
 
 app.get("/getnewtoken/:token/:clientid/:clientsecret", async (req, res) => {
     const token = req.params.token;
     const clientid = req.params.clientid;
     const clientsecret = req.params.clientsecret;
-
     const result = await fetch(
         `https://accounts.zoho.com/oauth/v2/token?refresh_token=${token}&grant_type=refresh_token&client_id=${clientid}&client_secret=${clientsecret}`,
         { method: "POST" }
     ).then(resp => resp.json());
 
     res.send(result);
-
 });
 
+app.get("/geteventdetails/:token/:cid/:eid", async (req, res) => {
+    const token = `Zoho-oauthtoken ${req.params.token}`;
+    const cid = req.params.cid;
+    const eid = req.params.eid;
+
+    const result = await fetch(
+        `https://calendar.zoho.com/api/v1/calendars/${cid}/events/${eid}`,
+        {
+            headers: { Authorization: token }
+        }
+    ).then(resp => {
+        if (resp.status === 200) {
+
+            return resp.json();
+        }
+        if (resp.status === 401) {
+            return 1;
+        }
+        return 0;
+    });
+
+
+    if (result !== 0 && result !== 1) {
+        res.status(200).send(result);
+    } else {
+        res.status(401).send("Invalid token");
+    }
+});
 
 app.listen(port);
