@@ -2,6 +2,7 @@ import express from "express";
 import fetch from "node-fetch";
 import cors from "cors";
 import bodyParser from "body-parser";
+import moment from "moment";
 const FormData = require("form-data");
 
 const app = express();
@@ -54,7 +55,15 @@ app.post("/getEventList/:accesstoken/:calendarid", async (req, res) => {
     });
 
     if (result !== 0 && result !== 1) {
-        res.status(200).send(result);
+        const events = result.events;
+
+        events.sort((a, b) => {
+            const date1 = moment(a.dateandtime.start).format("x");
+            const date2 = moment(b.dateandtime.start).format("x");
+
+            return date1 - date2;
+        });
+        res.status(200).send(events);
     } else {
         res.status(401).send("Invalid Token");
     }
@@ -93,6 +102,7 @@ app.post("/editEvent/:token", async (req, res) => {
         color: obj.color,
         description: obj.description
     };
+
     const data = new FormData();
 
     data.append("eventdata", JSON.stringify(eventdata));
@@ -101,7 +111,6 @@ app.post("/editEvent/:token", async (req, res) => {
         `https://calendar.zoho.com/api/v1/calendars/${req.body.cid}/events/${req.body.uid}`,
         { method: "POST", headers: { Authorization: token }, body: data }
     ).then(resp => {
-
         if (resp.status === 200) {
             return resp.json();
         }
@@ -110,7 +119,6 @@ app.post("/editEvent/:token", async (req, res) => {
         }
         return 0;
     });
-
 
     if (result !== 1 && result !== 0) {
         res.status(200).send(result);
@@ -143,7 +151,6 @@ app.get("/geteventdetails/:token/:cid/:eid", async (req, res) => {
         }
     ).then(resp => {
         if (resp.status === 200) {
-
             return resp.json();
         }
         if (resp.status === 401) {
@@ -151,7 +158,6 @@ app.get("/geteventdetails/:token/:cid/:eid", async (req, res) => {
         }
         return 0;
     });
-
 
     if (result !== 0 && result !== 1) {
         res.status(200).send(result);
