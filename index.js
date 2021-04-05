@@ -3,6 +3,7 @@ import fetch from "node-fetch";
 import cors from "cors";
 import bodyParser from "body-parser";
 import moment from "moment";
+import { config } from "./config";
 const FormData = require("form-data");
 
 const app = express();
@@ -12,15 +13,17 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-app.get("/authorization/:code/:clientid/:clientsecret", async (req, res) => {
+
+app.get("/getauthcode", async (req, res) => {
+    res.send(`https://accounts.zoho.com/oauth/v2/auth?scope=ZohoCalendar.calendar.ALL%2CZohoCalendar.event.ALL&client_id=${config.CLIENT_ID}&response_type=code&redirect_uri=${config.REACT_APP_URL}&access_type=offline&prompt=consent`);
+});
+
+app.get("/authorization/:code", async (req, res) => {
 
     // fetch access token
     const code = req.params.code;
-    const clientId = req.params.clientid;
-    const clientSecret = req.params.clientsecret;
-
     const result = await fetch(
-        `https://accounts.zoho.com/oauth/v2/token?code=${code}&grant_type=authorization_code&client_id=${clientId}&client_secret=${clientSecret}&redirect_uri=http://127.0.0.1:3000/home&scope=AaaServer.profile.READ%2CAaaServer.profile.UPDATE`,
+        `https://accounts.zoho.com/oauth/v2/token?code=${code}&grant_type=authorization_code&client_id=${config.CLIENT_ID}&client_secret=${config.CLIENT_SECRET}&redirect_uri=http://127.0.0.1:3000/home&scope=AaaServer.profile.READ%2CAaaServer.profile.UPDATE`,
         { method: "POST" }
     ).then(resp => resp.json());
 
@@ -127,12 +130,10 @@ app.post("/editEvent/:token", async (req, res) => {
     }
 });
 
-app.get("/getnewtoken/:token/:clientid/:clientsecret", async (req, res) => {
+app.get("/getnewtoken/:token", async (req, res) => {
     const token = req.params.token;
-    const clientid = req.params.clientid;
-    const clientsecret = req.params.clientsecret;
     const result = await fetch(
-        `https://accounts.zoho.com/oauth/v2/token?refresh_token=${token}&grant_type=refresh_token&client_id=${clientid}&client_secret=${clientsecret}`,
+        `https://accounts.zoho.com/oauth/v2/token?refresh_token=${token}&grant_type=refresh_token&client_id=${config.CLIENT_ID}&client_secret=${config.CLIENT_SECRET}`,
         { method: "POST" }
     ).then(resp => resp.json());
 
